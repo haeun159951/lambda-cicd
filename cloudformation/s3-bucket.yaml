@@ -1,14 +1,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: S3 bucket for our CICD PR.
+Description: S3 bucket for our CICD PR
 
 Parameters:
   environment:
     Type: String
-    Description: The environment for this stack (e.g., dev, staging, prod).
+    Description: The environment for this stack (e.g., dev, staging, prod, test).
     AllowedValues:
       - dev
       - staging
       - prod
+      - test
     Default: test
 
 Resources:
@@ -16,10 +17,11 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub 'my-cicd-bucket-${environment}'
-    Tags:
-      - Key: Environment
-        Value: !Ref environment
+      Tags:
+        - Key: Environment
+          Value: !Ref environment
 
+Outputs:
   OutputBucketName:
-    Description: The name of the S3 bucket created for CICD.
+    Description: The name of the S3 bucket created for CICD
     Value: !Ref MyS3Bucket
