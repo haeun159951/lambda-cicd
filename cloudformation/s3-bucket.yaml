@@ -4,11 +4,12 @@ Description: S3 bucket for our CICD PR
 Parameters:
   environment:
     Type: String
-    Description: The environment for this stack (e.g., dev, staging, prod).
+    Description: The environment for this stack (e.g., dev, staging, prod, test).
     AllowedValues:
       - dev
       - staging
       - prod
+      - test
     Default: test
 
 Resources:
