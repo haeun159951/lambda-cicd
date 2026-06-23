@@ -1,0 +1,62 @@
+name: Validate CloudFormation Template on PR
+on:
+  pull_request:
+    paths:
+      - 'cloudformation/**'     
+permissions:    
+    pull-requests: write
+    contents: read
+
+jobs:
+  validate-cfn:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-east-1
+
+      - name: Validate CloudFormation Template
+        run: |
+          for template in cloudformation/*.yaml; do
+            echo "Validating $template"
+            aws cloudformation validate-template --template-body file://$template
+          done 
+
+      - name: Deploy our stack
+        run: |
+          stack_name="cfn-validate-pr-${{  github.event.pull_request.number }}"
+          aws cloudformation create-stack --stack-name $stack_name --template-body file://cloudformation/s3-bucket.yaml --parameters ParameterKey=environment,ParameterValue=test
+
+      - name: Comment on the PR
+        uses: actions/github-script@v6
+        with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            script: |
+                github.rest.issues.createComment({
+                    issue_number: context.payload.pull_request.number,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    body: `CloudFormation template validated and stack ${stack_name} created successfully!`
+                })
+
+  cleanup-on-merge:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: configure AWS
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-east-1
+
+      - name: Delete CloudFormation Stack
+        run: |
+          stack_name="pr-test-stack-${{  github.event.pull_request.number }}" 
+          echo "Deleting stack $stack_name"
+          aws cloudformation delete-stack --stack-name $stack_name  
