@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: S3 bucket for our CICD PR.
+Description: S3 bucket for our CICD PR
 
 Parameters:
   environment:
@@ -21,5 +21,5 @@ Resources:
         Value: !Ref environment
 
   OutputBucketName:
-    Description: The name of the S3 bucket created for CICD.
+    Description: The name of the S3 bucket created for CICD
     Value: !Ref MyS3Bucket
